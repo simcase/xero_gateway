@@ -26,7 +26,7 @@ module XeroGateway
     def_delegators :access_token, :get, :post, :put, :delete
 
     attr_reader   :ctoken, :csecret, :consumer_options, :authorization_expires_at
-    attr_accessor :session_handle
+    attr_accessor :session_handle, :expires_at
 
     def initialize(ctoken, csecret, options = {})
       @ctoken, @csecret = ctoken, csecret
