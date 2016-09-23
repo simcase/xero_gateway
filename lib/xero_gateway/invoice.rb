@@ -126,6 +126,12 @@ module XeroGateway
       @line_items_downloaded
     end
 
+    %w(sub_total tax_total total).each do |line_item_total_type|
+      define_method("#{line_item_total_type}=") do |new_total|
+        instance_variable_set("@#{line_item_total_type}", new_total) unless line_items_downloaded?
+      end
+    end
+
     # If line items are not downloaded, then attempt a download now (if this record was found to begin with).
     def line_items
       if line_items_downloaded?
@@ -133,7 +139,15 @@ module XeroGateway
       elsif invoice_id =~ GUID_REGEX && @gateway
         # There is an invoice_id so we can assume this record was loaded from Xero.
         # Let's attempt to download the line_item records (if there is a gateway)
-        @line_items = download_line_items
+        response = @gateway.get_invoice(invoice_id)
+        raise InvoiceNotFoundError, "Invoice with ID #{invoice_id} not found in Xero." unless response.success? && response.invoice.is_a?(XeroGateway::Invoice)
+
+        @line_items = response.invoice.line_items
+        @line_items_downloaded = true
+
+        @line_items
+
+      # Otherwise, this is a new invoice, so return the line_items reference.
       else
         # Otherwise, this is a new invoice, so return the line_items reference.
         @line_items
@@ -187,6 +201,7 @@ module XeroGateway
         b.DueDate Invoice.format_date(self.due_date) if self.due_date
         b.Status self.invoice_status if self.invoice_status
         b.Reference self.reference if self.reference
+        b.SentToContact self.sent_to_contact if self.sent_to_contact
         b.BrandingThemeID self.branding_theme_id if self.branding_theme_id
         b.LineAmountTypes self.line_amount_types
         b.LineItems {
