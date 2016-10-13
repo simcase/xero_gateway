@@ -14,6 +14,7 @@ module XeroGateway
     # to you by Xero inside the API Previewer.
     def initialize(consumer_key, consumer_secret, options = {})
       @xero_url = options[:xero_url] || "https://api.xero.com/api.xro/2.0"
+      @custom_headers = options[:custom_headers] || {}
       @client   = OAuth.new(consumer_key, consumer_secret, options)
     end
 
@@ -39,7 +40,7 @@ module XeroGateway
       request_params[:where]         = options[:where] if options[:where]
       request_params[:page]          = options[:page]  if options[:page]
 
-      response_xml = http_get(@client, "#{@xero_url}/Contacts", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/Contacts", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/contacts'})
     end
@@ -118,7 +119,7 @@ module XeroGateway
         end
       }
 
-      response_xml = http_post(@client, "#{@xero_url}/Contacts", request_xml, {})
+      response_xml = http_post(@client, "#{@xero_url}/Contacts", request_xml, {}, @custom_headers)
 
       response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'POST/contacts'})
       response.contacts.each_with_index do | response_contact, index |
@@ -139,7 +140,7 @@ module XeroGateway
       request_params[:order]          = options[:order] if options[:order]
       request_params[:where]          = options[:where] if options[:where]
 
-      response_xml = http_get(@client, "#{@xero_url}/ContactGroups", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/ContactGroups", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/contactgroups'})
     end
@@ -147,7 +148,7 @@ module XeroGateway
     # Retreives a contact group by its id.
     def get_contact_group_by_id(contact_group_id)
       request_params = { :ContactGroupID => contact_group_id }
-      response_xml = http_get(@client, "#{@xero_url}/ContactGroups/#{CGI.escape(contact_group_id)}", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/ContactGroups/#{CGI.escape(contact_group_id)}", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/contactgroup'})
     end
@@ -172,7 +173,7 @@ module XeroGateway
 
       request_params[:where]         = options[:where] if options[:where]
 
-      response_xml = http_get(@client, "#{@xero_url}/Invoices", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/Invoices", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/Invoices'})
     end
@@ -185,9 +186,9 @@ module XeroGateway
     #         get_invoice("OIT-12345") # By number
     def get_invoice(invoice_id_or_number, format = :xml)
       request_params = {}
-      headers        = {}
+      headers        = @custom_headers
 
-      headers.merge!("Accept" => "application/pdf") if format == :pdf
+      headers = headers.merge("Accept" => "application/pdf") if format == :pdf
 
       url  = "#{@xero_url}/Invoices/#{CGI.escape(invoice_id_or_number)}"
 
@@ -271,7 +272,7 @@ module XeroGateway
         end
       }
 
-      response_xml = http_put(@client, "#{@xero_url}/Invoices?SummarizeErrors=false", request_xml, {})
+      response_xml = http_put(@client, "#{@xero_url}/Invoices?SummarizeErrors=false", request_xml, {}, @custom_headers)
 
       response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'PUT/invoices'})
       response.invoices.each_with_index do | response_invoice, index |
@@ -297,7 +298,7 @@ module XeroGateway
 
       request_params[:where]            = options[:where] if options[:where]
 
-      response_xml = http_get(@client, "#{@xero_url}/CreditNotes", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/CreditNotes", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/CreditNotes'})
     end
@@ -311,7 +312,7 @@ module XeroGateway
 
       url  = "#{@xero_url}/CreditNotes/#{CGI.escape(credit_note_id_or_number)}"
 
-      response_xml = http_get(@client, url, request_params)
+      response_xml = http_get(@client, url, request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/CreditNote'})
     end
@@ -352,7 +353,7 @@ module XeroGateway
     #    create_credit_note(credit_note)
     def create_credit_note(credit_note)
       request_xml = credit_note.to_xml
-      response_xml = http_put(@client, "#{@xero_url}/CreditNotes", request_xml)
+      response_xml = http_put(@client, "#{@xero_url}/CreditNotes", request_xml, {}, @custom_headers)
       response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'PUT/credit_note'})
 
       # Xero returns credit_notes inside an <CreditNotes> tag, even though there's only ever
@@ -381,7 +382,7 @@ module XeroGateway
         end
       }
 
-      response_xml = http_put(@client, "#{@xero_url}/CreditNotes", request_xml, {})
+      response_xml = http_put(@client, "#{@xero_url}/CreditNotes", request_xml, {}, @custom_headers)
 
       response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'PUT/credit_notes'})
       response.credit_notes.each_with_index do | response_credit_note, index |
@@ -445,7 +446,7 @@ module XeroGateway
       request_params[:order]              = options[:order] if options[:order]
       request_params[:where]              = options[:where] if options[:where]
 
-      response_xml = http_get(@client, "#{@xero_url}/BankTransactions", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/BankTransactions", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/BankTransactions'})
     end
@@ -457,7 +458,7 @@ module XeroGateway
     def get_bank_transaction(bank_transaction_id)
       request_params = {}
       url = "#{@xero_url}/BankTransactions/#{CGI.escape(bank_transaction_id)}"
-      response_xml = http_get(@client, url, request_params)
+      response_xml = http_get(@client, url, request_params, @custom_headers)
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/BankTransaction'})
     end
 
@@ -495,7 +496,7 @@ module XeroGateway
       request_params[:ManualJournalID]  = options[:manual_journal_id] if options[:manual_journal_id]
       request_params[:ModifiedAfter]      = options[:modified_since] if options[:modified_since]
 
-      response_xml = http_get(@client, "#{@xero_url}/ManualJournals", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/ManualJournals", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/ManualJournals'})
     end
@@ -507,7 +508,7 @@ module XeroGateway
     def get_manual_journal(manual_journal_id)
       request_params = {}
       url = "#{@xero_url}/ManualJournals/#{CGI.escape(manual_journal_id)}"
-      response_xml = http_get(@client, url, request_params)
+      response_xml = http_get(@client, url, request_params, @custom_headers)
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/ManualJournal'})
     end
 
@@ -515,7 +516,7 @@ module XeroGateway
     # Gets all accounts for a specific organization in Xero.
     #
     def get_accounts
-      response_xml = http_get(@client, "#{xero_url}/Accounts")
+      response_xml = http_get(@client, "#{xero_url}/Accounts", {}, @custom_headers)
       parse_response(response_xml, {}, {:request_signature => 'GET/accounts'})
     end
 
@@ -531,7 +532,7 @@ module XeroGateway
     # Gets all tracking categories for a specific organization in Xero.
     #
     def get_tracking_categories
-      response_xml = http_get(@client, "#{xero_url}/TrackingCategories")
+      response_xml = http_get(@client, "#{xero_url}/TrackingCategories", {}, @custom_headers)
 
       parse_response(response_xml, {}, {:request_signature => 'GET/TrackingCategories'})
     end
@@ -540,7 +541,7 @@ module XeroGateway
     # Gets Organisation details
     #
     def get_organisation
-      response_xml = http_get(@client, "#{xero_url}/Organisation")
+      response_xml = http_get(@client, "#{xero_url}/Organisation", {}, @custom_headers)
       parse_response(response_xml, {}, {:request_signature => 'GET/organisation'})
     end
 
@@ -548,7 +549,7 @@ module XeroGateway
     # Gets all currencies for a specific organisation in Xero
     #
     def get_currencies
-      response_xml = http_get(@client, "#{xero_url}/Currencies")
+      response_xml = http_get(@client, "#{xero_url}/Currencies", {}, @custom_headers)
       parse_response(response_xml, {}, {:request_signature => 'GET/currencies'})
     end
 
@@ -556,7 +557,7 @@ module XeroGateway
     # Gets all Tax Rates for a specific organisation in Xero
     #
     def get_tax_rates
-      response_xml = http_get(@client, "#{xero_url}/TaxRates")
+      response_xml = http_get(@client, "#{xero_url}/TaxRates", {}, @custom_headers)
       parse_response(response_xml, {}, {:request_signature => 'GET/tax_rates'})
     end
 
@@ -578,7 +579,7 @@ module XeroGateway
         payment.to_xml(b)
       end
 
-      response_xml = http_put(@client, "#{xero_url}/Payments", request_xml)
+      response_xml = http_put(@client, "#{xero_url}/Payments", request_xml, {}, @custom_headers)
       parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'PUT/payments'})
     end
 
@@ -594,7 +595,7 @@ module XeroGateway
         end
       end
 
-      response_xml = http_put(@client, "#{xero_url}/Payments", request_xml)
+      response_xml = http_put(@client, "#{xero_url}/Payments", request_xml, {}, @custom_headers)
       parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'PUT/payments'})
     end
 
@@ -608,7 +609,7 @@ module XeroGateway
       request_params[:order]         = options[:order] if options[:order]
       request_params[:where]         = options[:where] if options[:where]
 
-      response_xml = http_get(@client, "#{@xero_url}/Payments", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/Payments", request_params, @custom_headers)
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/payments'})
     end
 
@@ -618,7 +619,7 @@ module XeroGateway
     #
     def get_payment(payment_id, options = {})
       request_params = {}
-      response_xml = http_get(client, "#{xero_url}/Payments/#{payment_id}", request_params)
+      response_xml = http_get(client, "#{xero_url}/Payments/#{payment_id}", request_params, @custom_headers)
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/payments'})
     end
 
@@ -632,7 +633,7 @@ module XeroGateway
         params[xero_key] = val
         params
       end
-      response_xml = http_get(@client, "#{@xero_url}/reports/#{id_or_name}", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/reports/#{id_or_name}", request_params, @custom_headers)
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/reports'})
     end
 
@@ -640,7 +641,7 @@ module XeroGateway
 
     def get_contact(contact_id = nil, contact_number = nil)
       request_params = contact_id ? { :contactID => contact_id } : { :contactNumber => contact_number }
-      response_xml = http_get(@client, "#{@xero_url}/Contacts/#{CGI.escape(contact_id||contact_number)}", request_params)
+      response_xml = http_get(@client, "#{@xero_url}/Contacts/#{CGI.escape(contact_id||contact_number)}", request_params, @custom_headers)
 
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/contact'})
     end
@@ -653,11 +654,11 @@ module XeroGateway
       create_or_save = nil
       if contact.contact_id.nil? && contact.contact_number.nil?
         # Create new contact record.
-        response_xml = http_put(@client, "#{@xero_url}/Contacts", request_xml, {})
+        response_xml = http_put(@client, "#{@xero_url}/Contacts", request_xml, {}, @custom_headers)
         create_or_save = :create
       else
         # Update existing contact record.
-        response_xml = http_post(@client, "#{@xero_url}/Contacts", request_xml, {})
+        response_xml = http_post(@client, "#{@xero_url}/Contacts", request_xml, {}, @custom_headers)
         create_or_save = :save
       end
 
@@ -674,11 +675,11 @@ module XeroGateway
       create_or_save = nil
       if invoice.invoice_id.nil?
         # Create new invoice record.
-        response_xml = http_put(@client, "#{@xero_url}/Invoices", request_xml, {})
+        response_xml = http_put(@client, "#{@xero_url}/Invoices", request_xml, {}, @custom_headers)
         create_or_save = :create
       else
         # Update existing invoice record.
-        response_xml = http_post(@client, "#{@xero_url}/Invoices", request_xml, {})
+        response_xml = http_post(@client, "#{@xero_url}/Invoices", request_xml, {}, @custom_headers)
         create_or_save = :save
       end
 
@@ -703,11 +704,11 @@ module XeroGateway
 
       if bank_transaction.bank_transaction_id.nil?
         # Create new bank transaction record.
-        response_xml = http_put(@client, "#{@xero_url}/BankTransactions", request_xml, {})
+        response_xml = http_put(@client, "#{@xero_url}/BankTransactions", request_xml, {}, @custom_headers)
         create_or_save = :create
       else
         # Update existing bank transaction record.
-        response_xml = http_post(@client, "#{@xero_url}/BankTransactions", request_xml, {})
+        response_xml = http_post(@client, "#{@xero_url}/BankTransactions", request_xml, {}, @custom_headers)
         create_or_save = :save
       end
 
@@ -732,11 +733,11 @@ module XeroGateway
 
       if manual_journal.manual_journal_id.nil?
         # Create new manual journal record.
-        response_xml = http_put(@client, "#{@xero_url}/ManualJournals", request_xml, {})
+        response_xml = http_put(@client, "#{@xero_url}/ManualJournals", request_xml, {}, @custom_headers)
         create_or_save = :create
       else
         # Update existing manual journal record.
-        response_xml = http_post(@client, "#{@xero_url}/ManualJournals", request_xml, {})
+        response_xml = http_post(@client, "#{@xero_url}/ManualJournals", request_xml, {}, @custom_headers)
         create_or_save = :save
       end
 
