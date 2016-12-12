@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Tim Connor", "Nik Wakelin", "Jared Armstrong"]
   s.license     = "MIT"
 
-  s.files       = ["Gemfile", "LICENSE", "Rakefile", "README.textile", "xero_gateway.gemspec"] + Dir['**/*.rb'] + Dir['**/*.crt']
+  s.files       = ["Gemfile", "LICENSE", "Rakefile", "README.md", "xero_gateway.gemspec"] + Dir['**/*.rb'] + Dir['**/*.crt']
 
   s.add_dependency "builder", ">= 3.2.2"
   s.add_dependency "oauth", ">= 0.3.6"
