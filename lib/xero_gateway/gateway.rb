@@ -562,11 +562,7 @@ module XeroGateway
     # Create Tax Rate record in Xero
     #
     def create_tax_rate(tax_rate)
-      b = Builder::XmlMarkup.new
-
-      request_xml = b.TaxRates do
-        tax_rate.to_xml(b)
-      end
+      request_xml = tax_rate.to_xml
 
       response_xml = http_put(@client, "#{xero_url}/TaxRates", request_xml, {}, @custom_headers)
       parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'PUT/taxrates'})
