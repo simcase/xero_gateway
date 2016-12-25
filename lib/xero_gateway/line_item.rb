@@ -17,6 +17,7 @@ module XeroGateway
       @tracking ||= []
       @quantity = 1
       @unit_amount = BigDecimal.new('0')
+      @discount_rate = BigDecimal.new('0')
 
       params.each do |k,v|
         self.send("#{k}=", v)
@@ -67,7 +68,7 @@ module XeroGateway
     # Calculate the line_amount as quantity * unit_amount as this value must be correct
     # for the API call to succeed.
     def line_amount
-      quantity * unit_amount
+      quantity * unit_amount * ((100 - discount_rate) / 100)
     end
 
     def to_xml(b = Builder::XmlMarkup.new)
