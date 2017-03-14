@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    xero_gateway (2.3.1)
+    xero_gateway (2.3.3)
       activesupport
       builder (>= 3.2.2)
       oauth (>= 0.3.6)
@@ -15,7 +15,7 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
-    builder (3.2.2)
+    builder (3.2.3)
     i18n (0.7.0)
     json (1.8.3)
     libxml-ruby (2.7.0)
