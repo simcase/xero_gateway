@@ -647,6 +647,20 @@ module XeroGateway
       parse_response(response_xml, {:request_params => request_params}, {:request_signature => 'GET/reports'})
     end
 
+    def create_items(items)
+      b = Builder::XmlMarkup.new
+      request_xml = b.Items {
+        items.each do | item |
+          item.to_xml(b)
+        end
+      }
+
+      response_xml = http_post(@client, "#{@xero_url}/Items", request_xml, {}, @custom_headers)
+
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'POST/items'})
+      response
+    end
+
     private
 
     def get_contact(contact_id = nil, contact_number = nil)
@@ -788,6 +802,7 @@ module XeroGateway
           when "Contacts" then element.children.each {|child| response.response_item << Contact.from_xml(child, self) }
           when "ContactGroups" then element.children.each {|child| response.response_item << ContactGroup.from_xml(child, self, {:contacts_downloaded => options[:request_signature] != "GET/contactgroups"}) }
           when "Invoices" then element.children.each {|child| response.response_item << Invoice.from_xml(child, self, {:line_items_downloaded => options[:request_signature] != "GET/Invoices"}) }
+          when "Items" then element.children.each {|child| response.response_item << Item.from_xml(child) }
           when "BankTransactions"
             element.children.each do |child|
               response.response_item << BankTransaction.from_xml(child, self, {:line_items_downloaded => options[:request_signature] != "GET/BankTransactions"})
