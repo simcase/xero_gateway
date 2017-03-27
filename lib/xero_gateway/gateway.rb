@@ -278,6 +278,30 @@ module XeroGateway
       response
     end
 
+    #
+    # Saves an array of invoices with a single API request.
+    #
+    # Usage :
+    #  invoices = [XeroGateway::Invoice.new(...), XeroGateway::Invoice.new(...)]
+    #  result = gateway.save_invoices(invoices)
+    #
+    def save_invoices(invoices)
+      b = Builder::XmlMarkup.new
+      request_xml = b.Invoices {
+        invoices.each do | invoice |
+          invoice.to_xml(b)
+        end
+      }
+
+      response_xml = http_post(@client, "#{@xero_url}/Invoices?SummarizeErrors=false", request_xml, {}, @custom_headers)
+
+      response = parse_response(response_xml, {:request_xml => request_xml}, {:request_signature => 'POST/invoices'})
+      response.invoices.each_with_index do | response_invoice, index |
+        invoices[index].invoice_id = response_invoice.invoice_id if response_invoice && response_invoice.invoice_id
+      end
+      response
+    end
+
     # Retrieves all credit_notes from Xero
     #
     # Usage : get_credit_notes
