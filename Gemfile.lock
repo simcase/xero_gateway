@@ -43,7 +43,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler
-  libxml-ruby
+  libxml-ruby (= 2.7.0)
   minitest
   mocha
   rake
@@ -52,4 +52,4 @@ DEPENDENCIES
   xero_gateway!
 
 BUNDLED WITH
-   1.13.2
+   1.15.1
