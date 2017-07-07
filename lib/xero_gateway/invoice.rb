@@ -37,7 +37,10 @@ module XeroGateway
     attr_accessor :line_items_downloaded
 
     # All accessible fields
-    attr_accessor :invoice_id, :invoice_number, :invoice_type, :invoice_status, :date, :due_date, :reference, :branding_theme_id, :line_amount_types, :currency_code, :line_items, :contact, :payments, :fully_paid_on, :amount_due, :amount_paid, :amount_credited, :sent_to_contact, :url, :updated_date_utc
+    attr_accessor :invoice_id, :invoice_number, :invoice_type, :invoice_status, :date, :due_date, :reference, :branding_theme_id,
+                  :line_amount_types, :currency_code, :currency_rate, :payments, :fully_paid_on, :amount_due, :amount_paid, :amount_credited,
+                  :sent_to_contact, :url, :updated_date_utc
+    attr_writer   :contact, :line_items
 
     def initialize(params = {})
       @errors ||= []
@@ -133,7 +136,6 @@ module XeroGateway
     def line_items
       if line_items_downloaded?
         @line_items
-
       elsif invoice_id =~ GUID_REGEX && @gateway
         # There is an invoice_id so we can assume this record was loaded from Xero.
         # Let's attempt to download the line_item records (if there is a gateway)
@@ -147,12 +149,13 @@ module XeroGateway
 
       # Otherwise, this is a new invoice, so return the line_items reference.
       else
+        # Otherwise, this is a new invoice, so return the line_items reference.
         @line_items
       end
     end
 
     def ==(other)
-      ["invoice_number", "invoice_type", "invoice_status", "reference", "currency_code", "line_amount_types", "contact", "line_items"].each do |field|
+      ["invoice_number", "invoice_type", "invoice_status", "reference", "currency_code", "currency_rate", "line_amount_types", "contact", "line_items"].each do |field|
         return false if send(field) != other.send(field)
       end
 
@@ -191,7 +194,8 @@ module XeroGateway
         b.InvoiceID self.invoice_id if self.invoice_id
         b.InvoiceNumber self.invoice_number if invoice_number
         b.Type self.invoice_type
-        b.CurrencyCode self.currency_code if self.currency_code
+        b.CurrencyCode currency_code if currency_code
+        b.CurrencyRate currency_rate if currency_rate
         contact.to_xml(b)
         b.Date Invoice.format_date(self.date || Date.today)
         b.DueDate Invoice.format_date(self.due_date) if self.due_date
@@ -218,6 +222,7 @@ module XeroGateway
           when "InvoiceNumber" then invoice.invoice_number = element.text
           when "Type" then invoice.invoice_type = element.text
           when "CurrencyCode" then invoice.currency_code = element.text
+          when "CurrencyRate" then invoice.currency_rate = BigDecimal.new(element.text)
           when "Contact" then invoice.contact = Contact.from_xml(element)
           when "Date" then invoice.date = parse_date(element.text)
           when "DueDate" then invoice.due_date = parse_date(element.text)
@@ -230,8 +235,6 @@ module XeroGateway
           when "SubTotal" then invoice.sub_total = BigDecimal.new(element.text)
           when "TotalTax" then invoice.total_tax = BigDecimal.new(element.text)
           when "Total" then invoice.total = BigDecimal.new(element.text)
-          when "InvoiceID" then invoice.invoice_id = element.text
-          when "InvoiceNumber" then invoice.invoice_number = element.text
           when "Payments" then element.children.each { | payment | invoice.payments << Payment.from_xml(payment) }
           when "AmountDue" then invoice.amount_due = BigDecimal.new(element.text)
           when "AmountPaid" then invoice.amount_paid = BigDecimal.new(element.text)
@@ -243,5 +246,15 @@ module XeroGateway
       end
       invoice
     end
+
+    private
+
+      def download_line_items
+        response = @gateway.get_invoice(invoice_id)
+        raise InvoiceNotFoundError, "Invoice with ID #{invoice_id} not found in Xero." unless response.success? && response.invoice.is_a?(XeroGateway::Invoice)
+
+        @line_items_downloaded = true
+        @line_items = response.invoice.line_items
+      end
   end
 end

@@ -37,6 +37,15 @@ class BankTransactionTest < Test::Unit::TestCase
     should "allow overriding transaction defaults" do
       assert_equal 'SPEND', create_test_bank_transaction(:type => 'SPEND').type
     end
+
+    should "support another currency" do
+      usd_code = "USD"
+      usd_rate = 1.402
+      bank_transaction = create_test_bank_transaction(:currency_code => usd_code,
+                                                      :currency_rate => usd_rate)
+      assert_equal usd_code, bank_transaction.currency_code
+      assert_equal usd_rate, bank_transaction.currency_rate
+    end
   end
 
   context "adding line items" do
@@ -124,9 +133,9 @@ class BankTransactionTest < Test::Unit::TestCase
 private
 
   def assert_xml_field(xml, field_name, options={})
-    assert_match /#{field_name}/, xml.to_s, "Didn't find the field #{field_name} in the XML document!"
+    assert_match(/#{field_name}/, xml.to_s, "Didn't find the field #{field_name} in the XML document!")
     if options[:value]
-      assert_match /#{field_name}.*#{options[:value]}.*#{field_name}/, xml.to_s, "The field #{field_name} was expected to be '#{options[:value]}'!"
+      assert_match(/#{field_name}.*#{options[:value]}.*#{field_name}/, xml.to_s, "The field #{field_name} was expected to be '#{options[:value]}'!")
     end
   end
 
