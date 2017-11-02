@@ -1,4 +1,6 @@
+# coding: utf-8
 require File.join(File.dirname(__FILE__), 'account')
+require 'bigdecimal'
 
 module XeroGateway
   class LineItem
@@ -68,7 +70,10 @@ module XeroGateway
     # Calculate the line_amount as quantity * unit_amount as this value must be correct
     # for the API call to succeed.
     def line_amount
-      quantity * unit_amount * ((100 - discount_rate) / 100)
+      # TODO По хорошему unit_amount надо при инициализации превращать в BigDecimal, а не тут
+      unit_amount_big = BigDecimal.new(unit_amount.to_s)
+      discount_rate_big = BigDecimal.new(discount_rate.to_s)
+      quantity * unit_amount_big * ((100 - discount_rate_big) / 100)
     end
 
     def to_xml(b = Builder::XmlMarkup.new)
@@ -80,7 +85,7 @@ module XeroGateway
         b.TaxType tax_type if tax_type
         b.TaxAmount tax_amount if tax_amount
         b.DiscountRate discount_rate if discount_rate
-        b.LineAmount line_amount if line_amount
+        b.LineAmount LineItem.format_money(line_amount) if line_amount
         b.AccountCode account_code if account_code
         if has_tracking?
           b.Tracking {
