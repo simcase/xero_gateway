@@ -12,14 +12,17 @@ module XeroGateway
     attr_reader :errors
 
     # All accessible fields
-    attr_accessor :line_item_id, :description, :quantity, :unit_amount, :item_code, :tax_type, :tax_amount, :discount_rate, :account_code, :tracking
+    attr_accessor :line_item_id, :description, :quantity, :unit_amount, :item_code,
+                  :tax_type, :tax_amount, :discount_rate, :account_code, :tracking,
+                  :options
 
-    def initialize(params = {})
+    def initialize(params = {}, options = {})
       @errors ||= []
       @tracking ||= []
       @quantity = 1
       @unit_amount = BigDecimal.new('0')
       @discount_rate = BigDecimal.new('0')
+      @options = options
 
       params.each do |k,v|
         self.send("#{k}=", v)
@@ -85,7 +88,10 @@ module XeroGateway
         b.TaxType tax_type if tax_type
         b.TaxAmount tax_amount if tax_amount
         b.DiscountRate discount_rate if discount_rate
-        b.LineAmount LineItem.format_money(line_amount) if line_amount
+        # NOTE option :dont_set_line_amount due to bug https://community.xero.com/developer/discussion/39048510
+        if line_amount && !options[:dont_set_line_amount]
+          b.LineAmount LineItem.format_money(line_amount)
+        end
         b.AccountCode account_code if account_code
         if has_tracking?
           b.Tracking {
