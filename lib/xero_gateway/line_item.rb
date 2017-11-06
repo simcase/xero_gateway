@@ -73,9 +73,10 @@ module XeroGateway
     # Calculate the line_amount as quantity * unit_amount as this value must be correct
     # for the API call to succeed.
     def line_amount
+      # TODO LineAmount похоже вообще не обязательное поле в апи. Оно нам надо, его отправлять?
       # TODO По хорошему unit_amount надо при инициализации превращать в BigDecimal, а не тут
       unit_amount_big = BigDecimal.new(unit_amount.to_s)
-      discount_rate_big = BigDecimal.new(discount_rate.to_s)
+      discount_rate_big = BigDecimal.new(discount_rate.round(2).to_s)
       quantity * unit_amount_big * ((100 - discount_rate_big) / 100)
     end
 
