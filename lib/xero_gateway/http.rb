@@ -124,10 +124,10 @@ module XeroGateway
 
         else
 
-          raise ApiException.new(doc.root.elements["Type"].text,
-                                 doc.root.elements["Message"].text,
-                                 request_xml,
-                                 raw_response)
+          raise ApiException.new(doc.root.elements["Type"].text.force_encoding(Encoding::UTF_8),
+                                 doc.root.elements["Message"].text.force_encoding(Encoding::UTF_8),
+                                 request_xml.force_encoding(Encoding::UTF_8),
+                                 raw_response.force_encoding(Encoding::UTF_8))
 
         end
       end
